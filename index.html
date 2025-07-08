@@ -346,12 +346,20 @@
         // Display the results
         function displayResults(data) {
             const resultsDiv = document.getElementById('results');
-            let html = '<h2 style="text-align: center; margin-bottom: 20px;">📊 Smuggler Segments - Local Legend Status</h2>';
+            let html = '<h2 style="text-align: center; margin-bottom: 20px;">📊 Smuggler Segments - Local Legend Status (Last 30 Days)</h2>';
 
             data.segments.forEach((segment, index) => {
                 const isRide = index === 0; // First segment is ride, second is run
                 const typeClass = isRide ? 'type-ride' : 'type-run';
                 const typeLabel = isRide ? '🚴 RIDE' : '🏃 RUN';
+                
+                // Handle both old and new data format
+                const legendName = segment.localLegend?.overall?.topAthlete?.athlete_name || 
+                                 segment.localLegend?.athlete_name || 'Unknown';
+                const effortCount = segment.localLegend?.overall?.topAthlete?.effort_count || 
+                                  segment.localLegend?.effort_count || 0;
+                const totalEfforts = segment.localLegend?.totalEffortsLast30Days || 0;
+                const uniqueAthletes = segment.localLegend?.uniqueAthletesLast30Days || 0;
                 
                 html += `
                     <div class="segment-card">
@@ -361,12 +369,20 @@
                         </h3>
                         <div class="legend-info">
                             <div class="info-item">
-                                <div class="info-label">Local Legend</div>
-                                <div class="info-value">${segment.localLegend.athlete_name || 'Unknown'}</div>
+                                <div class="info-label">Local Legend (30 days)</div>
+                                <div class="info-value">${legendName}</div>
                             </div>
                             <div class="info-item">
-                                <div class="info-label">Efforts (90 days)</div>
-                                <div class="info-value">${segment.localLegend.effort_count || 0}</div>
+                                <div class="info-label">Leader's Efforts</div>
+                                <div class="info-value">${effortCount}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Total Efforts</div>
+                                <div class="info-value">${totalEfforts}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Active Athletes</div>
+                                <div class="info-value">${uniqueAthletes}</div>
                             </div>
                             <div class="info-item">
                                 <div class="info-label">Distance</div>
@@ -377,11 +393,16 @@
                                 <div class="info-value">${Math.round(segment.total_elevation_gain || 0)} m</div>
                             </div>
                         </div>
+                        ${segment.error ? `<div class="error" style="margin-top: 10px;">Note: ${segment.error}</div>` : ''}
                     </div>
                 `;
             });
 
             html += `<div class="last-update">Last updated: ${new Date().toLocaleString()}</div>`;
+            html += `<div style="text-align: center; margin-top: 10px; color: #666; font-size: 14px;">
+                        Note: Shows athletes with most efforts in the last 30 days. 
+                        Limited to recent public activities due to API constraints.
+                     </div>`;
             resultsDiv.innerHTML = html;
         }
     </script>
