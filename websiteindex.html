@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strava Local Legends Tracker</title>
+    <title>Strava Local Legends Tracker - Smuggler Segments</title>
     <style>
         * {
             margin: 0;
@@ -157,6 +157,25 @@
             font-size: 24px;
         }
 
+        .segment-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .type-ride {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .type-run {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
         .legend-info {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -233,7 +252,7 @@
 <body>
     <div class="container">
         <h1>🚴 Strava Local Legends Tracker</h1>
-        <p class="subtitle">Track local legend status for your favorite segments</p>
+        <p class="subtitle">Tracking Smuggler segments (Ride & Run)</p>
         
         <div class="config-section">
             <h3>⚙️ Configuration</h3>
@@ -244,12 +263,12 @@
             
             <div class="segment-inputs">
                 <div class="input-group">
-                    <label for="segment1">Segment 1 ID:</label>
-                    <input type="text" id="segment1" placeholder="e.g., 12345678">
+                    <label for="segment1">🚴 Smuggler Ride Segment:</label>
+                    <input type="text" id="segment1" value="2344230" readonly>
                 </div>
                 <div class="input-group">
-                    <label for="segment2">Segment 2 ID:</label>
-                    <input type="text" id="segment2" placeholder="e.g., 87654321">
+                    <label for="segment2">🏃 Smuggler Run Segment:</label>
+                    <input type="text" id="segment2" value="4805244" readonly>
                 </div>
             </div>
             
@@ -269,8 +288,6 @@
             if (savedConfig) {
                 const config = JSON.parse(savedConfig);
                 document.getElementById('scriptUrl').value = config.scriptUrl || '';
-                document.getElementById('segment1').value = config.segment1 || '';
-                document.getElementById('segment2').value = config.segment2 || '';
             }
         };
 
@@ -302,8 +319,8 @@
             const segment1 = document.getElementById('segment1').value;
             const segment2 = document.getElementById('segment2').value;
 
-            if (!scriptUrl || !segment1 || !segment2) {
-                showMessage('Please fill in all fields', 'error');
+            if (!scriptUrl) {
+                showMessage('Please enter your Google Apps Script URL', 'error');
                 return;
             }
 
@@ -329,19 +346,26 @@
         // Display the results
         function displayResults(data) {
             const resultsDiv = document.getElementById('results');
-            let html = '<h2 style="text-align: center; margin-bottom: 20px;">📊 Local Legend Status</h2>';
+            let html = '<h2 style="text-align: center; margin-bottom: 20px;">📊 Smuggler Segments - Local Legend Status</h2>';
 
-            data.segments.forEach(segment => {
+            data.segments.forEach((segment, index) => {
+                const isRide = index === 0; // First segment is ride, second is run
+                const typeClass = isRide ? 'type-ride' : 'type-run';
+                const typeLabel = isRide ? '🚴 RIDE' : '🏃 RUN';
+                
                 html += `
                     <div class="segment-card">
-                        <h3>${segment.name}</h3>
+                        <h3>
+                            ${segment.name}
+                            <span class="segment-type ${typeClass}">${typeLabel}</span>
+                        </h3>
                         <div class="legend-info">
                             <div class="info-item">
                                 <div class="info-label">Local Legend</div>
                                 <div class="info-value">${segment.localLegend.athlete_name || 'Unknown'}</div>
                             </div>
                             <div class="info-item">
-                                <div class="info-label">Efforts</div>
+                                <div class="info-label">Efforts (90 days)</div>
                                 <div class="info-value">${segment.localLegend.effort_count || 0}</div>
                             </div>
                             <div class="info-item">
@@ -349,8 +373,8 @@
                                 <div class="info-value">${(segment.distance / 1000).toFixed(2)} km</div>
                             </div>
                             <div class="info-item">
-                                <div class="info-label">Avg Grade</div>
-                                <div class="info-value">${segment.average_grade}%</div>
+                                <div class="info-label">Elevation Gain</div>
+                                <div class="info-value">${Math.round(segment.total_elevation_gain || 0)} m</div>
                             </div>
                         </div>
                     </div>
